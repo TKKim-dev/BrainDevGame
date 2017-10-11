@@ -7,18 +7,21 @@ class NBack {
   char[] calcChar = {'+', '-', '×', '÷'}; 
   int[] answers = new int[20]; // 정답 리스트를 저장할 배열
   int difficulty; // 난이도
-  int wrongAnswers; // 오답 수
+  int correctAnswers, wrongAnswers; // 오답 수
   int timer;
   int i;
+  int timeDelay;
   public boolean isGameRunning;
   Knob NBacktimer;
-  Textfield userInput, question1, question2;
+  Textfield userInput, question1, correctAnswer, wrongAnswer;
   
   NBack() {
     numberN = 2;
     difficulty = 1;
+    correctAnswers = 0;
     wrongAnswers = 0;
     randomize();
+    timeDelay = 2000;
     cp5.addBang("startNBack")
        .setPosition(width / 2 - 80, 50)
        .setSize(160,40)
@@ -32,11 +35,29 @@ class NBack {
        .setCaptionLabel("End Training")
        .setFont(createFont("Arial",15))
        .getCaptionLabel().align(ControlP5.CENTER, ControlP5.CENTER);
-       ;       
+       ;
+    correctAnswer = cp5.addTextfield("correctAnswers")
+       .setPosition(width / 2 - 40, 100)
+       .setSize(50, 50)
+       .setCaptionLabel("O")
+       .setFont(createFont("Arial",45))
+       .lock()
+       .hide()
+       .setText("0")
+       ;
+    wrongAnswer = cp5.addTextfield("wrongAnswers")
+       .setPosition(width / 2 + 10, 100)
+       .setSize(50, 50)
+       .setCaptionLabel("X")
+       .setFont(createFont("Arial",45))
+       .lock()
+       .hide()
+       .setText("0")
+       ;
     NBacktimer = cp5.addKnob("NBacktimer")
        .setPosition(width / 2 - 200, height / 2 - 20)
        .setRadius(20)
-       .setRange(0, 2000)
+       .setRange(0, timeDelay)
        .setStartAngle(1.5f * PI)
        .setAngleRange(TWO_PI)
        //.setColorValue(#DB0513)
@@ -48,13 +69,15 @@ class NBack {
        .lock();
        ;
     userInput = cp5.addTextfield("userInput")
-       .setPosition(20,100)
-       .setSize(200,40)
-       .setFont(createFont("Arial",15)) 
+       .setPosition(width / 2 - 40, height / 2 + 100)
+       .setSize(80,40)
+       .setFont(createFont("Arial",45)) 
        .setFocus(true)
-       .setColor(color(255,0,0))
+       .setColor(color(255,255,255))
        .setAutoClear(false)
        .setInputFilter(ControlP5.INTEGER)
+       .setCaptionLabel("")
+       .keepFocus(true)
        .hide()
        ;
     question1 = cp5.addTextfield("question1")
@@ -64,6 +87,7 @@ class NBack {
        .setCaptionLabel("Question")
        .setColorBackground(#D4E8F8)
        .setColor(#0C0050)
+       .setCaptionLabel("")
        .hide()
        .lock()
        ;
@@ -71,22 +95,46 @@ class NBack {
   }
   
   void run() { 
-    if(i == 0  || millis() - timer > 2000) { // i = 0 조건은 맨 처음 문제의 경우
+    println(nback.i);
+    if(i == 0  || millis() - timer > timeDelay) { // i = 0 조건은 맨 처음 문제의 경우
       setQuestion(question1);
-      //cp5 show
+      if(i > numberN) checkAnswer();
       timer = millis();
       i++;
     } else { // 정답 텍스트 박스 표시, 프로그램 대기 중
-      NBacktimer.setValue(2000 - millis() + timer);
-            NBacktimer.show();
-      question1.show();
+      NBacktimer.setValue(timeDelay - millis() + timer);
 
-      if(i > numberN - 1) userInput.show();
+      if(i > numberN) {
+        userInput.show()
+                 .setFocus(true);
+      }
+      if(keyPressed) {
+        if(key == ENTER && userInput.isVisible()) checkAnswer();
+      }
     }
+    if(i - numberN > answers.length) isGameRunning = false;
   }
   
   void setQuestion(Textfield question) {
-    question.setText("    " + calcNumbers1[i] + " " + calcChar[calcTypes[i]] + " " + calcNumbers2[i] + " = ?");
+    if(i < 20) question.setText("    " + calcNumbers1[i] + " " + calcChar[calcTypes[i]] + " " + calcNumbers2[i] + " = ?");
+    else question.setText("");
+  }
+  void checkAnswer() {
+    try {
+      if(answers[i - numberN - 1] == Integer.parseInt(userInput.getText())) {
+        timer -= timeDelay;
+        userInput.clear();
+        correctAnswers++;
+        correctAnswer.setText("" + correctAnswers);
+        return;
+      }
+    } catch(NumberFormatException nfe) {
+    }
+    timer -= timeDelay;
+    wrongAnswers++;
+    wrongAnswer.setText("" + wrongAnswers);    
+    userInput.clear();
+    return;
   }
   
   void randomize() {

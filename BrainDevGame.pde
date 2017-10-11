@@ -59,10 +59,9 @@ void draw() {
     
     case 'N':
     if(nback.isGameRunning) nback.run();
-    println(nback.userInput.getText());
+    
     break;
   }
-
   
 }
 
@@ -76,15 +75,19 @@ public void menuNBack() {
 public void startNBack() {
   nback.isGameRunning = true;
   nback.timer = millis();
+  nback.NBacktimer.show();
+  nback.question1.show();
+  cp5.getController("correctAnswers").show();
+  cp5.getController("wrongAnswers").show();
 } // startNBack()
 public void endNBack() {
   nback.isGameRunning = false;
   cp5.getController("startNBack").remove();
   cp5.getController("endNBack").remove();
   cp5.getController("userInput").remove();
+  cp5.getController("correctAnswers").remove();
+  cp5.getController("wrongAnswers").remove();
+  nback.question1.remove();
   nback.NBacktimer.remove();  
   gameMode = 'M';
 } // endNBack()
-public void inputNBack(String theText) {
-  println("a textfield event for controller 'input' : "+theText);
-}
